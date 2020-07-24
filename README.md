@@ -1,6 +1,6 @@
 ﻿# Episerver Divvy Integration
 
-This add-on allows a Divvy account to interact with an Episerver instance. When editrs Create content in the Divvy account, corresponding content objects will be created in the Episerver instance. When previewing content, Divvy will retrieve preview HTML directly from Episerver, and provide a way to enter Episerver's Edit Mode directly from Divvy.
+This add-on allows a Divvy account to interact with an Episerver instance. When editors create content in their Divvy account, corresponding content objects will be created in the Episerver instance. When previewing content, Divvy will retrieve preview HTML directly from Episerver, and provide a way to enter Episerver's Edit Mode directly from Divvy.
 
 ## Installation
 
@@ -21,21 +21,30 @@ To enable in Episerver:
 3. in `/configuration` add the Divvy element as shown below
 2. In the web.config, on the `divvy` element, add the same `authToken` from Step #4 above
 2. In the web.config, add a "mapping" element for for Divvy content type that should result in the synchronization of an Episerver content object (see below)
-3. For each content type that should be created from Divvy, extend the class from `IDivvyMappedType` and implement the `DivvyId` and `GetDivvyPreview` members
 
 ### Config Section Element
 
 ```
-<section name="divvy" type="Episerver.Divvy.Config.DivvyConfigSection"/>
+<section name="divvy" type="Episerver.Labs.Divvy.Config.DivvyConfigSection"/>
 ```
 
 ### Divvy Element
 
 ```
-<divvy enabled="true" debug="false" authToken="[the unique auth token]">
+<divvy enabled="true" debugRole="DivvyDebug" authToken="[the unique auth token]">
    <mapping divvyType="[name of content type in Divvy]" episerverType="[name of Episerver content type]" parent="[the numeric ID of where the content should be created]"/>
 </divvy>
 ```
+
+* **enabled:** set to false to disabled the entire system without uninstalling (removing the config element will do the same thing)
+* **debugRole:** users in this role will be able to view the debug info without passing an auth token; leave blank if not needed
+* **authToken:** the token both Episerver and Divvy will use to communicate; this needs to be the same in both systems
+
+For mappings:
+
+* **divvyType:** the name of the Divvy content type that should be handled
+* **episerverType:** the name of the Episerver type that should be created in response to the specified Divvy content type
+* **parent:** the numeric ID of the content under which the Episerver content should be created
 
 ## Process
 
@@ -43,20 +52,20 @@ When the Episerver integration is enabled in Divvy, an API request is sent to Ep
 
 If the Episerver instance is not configured to handle the specific content type created, Episerver returns a `null` value to Divvy, and Divvy functions normally.
 
-If the Episerver instance *is* configured to handle the specific content type created (via a 'mapping' element, as shown above), the Episerver instance will create a draft object of the specifed type, store the Divvy ID with it, and return the information to Divvy.
+If the Episerver instance *is* configured to handle the specific content type created (via a 'mapping' element, as shown above), the Episerver instance will create a draft object of the specifed type, store the mapping between Divvy type and Episerver type, and return the information to Divvy.
 
 (Note: the specification of a content type has to occur on both sides. In Divvy, the content type needs to be checked on the configuration screen. In Episerver, a mapping needs to be present which maps the Divvy content type to an Episerver content type.)
 
-When this occurs, Divvy will modify its UI for that content. In the Divvy UI, when Episerver-synchronized content is previwed, Divvy will make an API request to Episerver. Episerver will return a string of HTML to Divvy (from the `GetPreviewHtml` on the content object, from `IDivvyMappedType`) for Divvy to display. Additionally, the response from Episerver will contain the Edit Mode URL that Divvy will use when a user clicks the "Edit in Episerver" button.
+When this occurs, Divvy will modify its UI for that content. In the Divvy UI, when Episerver-synchronized content is previwed, Divvy will make an API request to Episerver. Episerver will return a string of HTML to Divvy to display. Additionally, the response from Episerver will contain the Edit Mode URL that Divvy will use when a user clicks the "Edit in Episerver" button.
 
-When Divvy-synchronized content is published in Episerver, an asynchronous request will be sent to Divvy with the new status of the content object.
+When Divvy-synchronized content is published or deleted in Episerver, an asynchronous request will be sent to Divvy with the new status of the content object.
 
 ## Extension Points
 
-The 'DivvyManager' class includes multiple events and one delegate for customization.
+The `DivvyManager` class includes multiple events and one delegate for customization.
 
-* `OnBeforeParseContentGatewayRequest` executes before the inbound JSON is parsed. The raw request body can be modified before parsing. To cancel Divvy processing, set `CancelAction` to `true`.
+* `OnBeforeParseContentGatewayRequest` executes before the inbound JSON is parsed. The raw request body string can be modified before parsing. To cancel Divvy processing, set `CancelAction` to `true`.
 * `OnAfterParseContentGatewayRequest` executes after the inbound JSON is parsed. The JSON can be manipulated. To cancel Divvy processing, set `CancelAction` to `true`.
-* `OnBeforeContentCreation` executes after mapping is completed, but immediately before content is created. To cancel Divvy processing, set `CancelAction` to `true`.
-* `OnAfterGeneratePreviewHtml` executes after the preview HTML is generated, but before it is sent to Divvy. It can be modified as desired.
-* `PreviewProvider` is a delegate that can be reassigned if a different method of generating HTML is desired.
+* `OnBeforeContentCreation` executes after mapping is completed, but immediately before content is created. To cancel Divvy processing, set `CancelAction` to `true`. To change where the Episerver content is created, modify `e.IntendedParent`. To change the content type of content to be created, modify `e.intendedIntendedTypeName`.
+* `OnAfterGeneratePreviewHtml` executes after the preview HTML is generated, but before it is sent to Divvy. Modify `e.PreviewHtml` as desired.
+* `PreviewProvider` is a delegate that can be reassigned if a different method of generating HTML is desired. It's expected that this will be modified for each installation.
