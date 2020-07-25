@@ -66,6 +66,53 @@ The `DivvyManager` class includes multiple events and one delegate for customiza
 
 * `OnBeforeParseContentGatewayRequest` executes before the inbound JSON is parsed. The raw request body string can be modified before parsing. To cancel Divvy processing, set `CancelAction` to `true`.
 * `OnAfterParseContentGatewayRequest` executes after the inbound JSON is parsed. The JSON can be manipulated. To cancel Divvy processing, set `CancelAction` to `true`.
-* `OnBeforeContentCreation` executes after mapping is completed, but immediately before content is created. To cancel Divvy processing, set `CancelAction` to `true`. To change where the Episerver content is created, modify `e.IntendedParent`. To change the content type of content to be created, modify `e.intendedIntendedTypeName`.
+* `OnBeforeContentCreation` executes after mapping is completed, but immediately before content is created. To cancel Divvy processing, set `CancelAction` to `true`. To change where the Episerver content is created, modify `e.IntendedParent`. To change the content type of content to be created, modify `e.IntendedTypeName`.
 * `OnAfterGeneratePreviewHtml` executes after the preview HTML is generated, but before it is sent to Divvy. Modify `e.PreviewHtml` as desired.
 * `PreviewProvider` is a delegate that can be reassigned if a different method of generating HTML is desired. It's expected that this will be modified for each installation.
+
+## Debugging API
+
+There's a limited REST API to retrieve debugging info from a running instance of the integration.
+
+You can authenticate two ways:
+
+1. Be logged into Episerver under an account which is a member of the `debugRole` as defined in the config
+2. Pass the authorization token in the `auth` querystring argument: `/divvy/debug/log?auth=[token]`
+
+Debug logging is off by default at application start. It must be actively turned on. It should be turned off (and cleared) when not needed.
+
+**/divvy/debug/log/status**
+
+Displays whether logging is off or on.
+
+**/divvy/debug/log/on**
+
+Turns request debug logging on.
+
+**/divvy/debug/log**
+
+Returns the general log. Each inbound request will be assigned a GUID as its `requestKey`.
+
+**/divvy/debug/log/[requestKey]**
+
+Returns the log entries for that the specified `requestKey`.
+
+**/divvy/debug/log/off**
+
+Turns logging off and clears all log entries.
+
+**/divvy/debug/types**
+
+Returns the mapped types.
+
+**/divvy/debug/mappings**
+
+Returns all content mappings -- links between Divvy content and Episerver content.
+
+**/divvy/debug/mappings/clear**
+
+Deletes all mappings. _Use with care._
+
+**/divvy/debug/mappings/clear/[id]**
+
+Deletes a specific mapping.
