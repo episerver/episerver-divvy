@@ -327,7 +327,7 @@ namespace Episerver.Labs.Divvy
         private static string GetPreviewHtml(IContent content)
         {
             // Clearly, you're going to want to re-implement this
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TestWebsite.Divvy.preview-template.html");
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Episerver.Labs.Divvy.preview-template.html");
             using (var reader = new StreamReader(stream))
             {
                 string template = reader.ReadToEnd();
