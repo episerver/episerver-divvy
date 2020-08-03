@@ -10,6 +10,9 @@ namespace Episerver.Labs.Divvy.Models
         public int Id { get; set; }
         public string Title { get; set; }
         public string ContentType { get; set; }
+        public string Description { get; set; }
+        public string Calendar { get; set; }
+        public string Owner { get; set; }
 
         public static ContentRequest ParseJson(string json)
         {
@@ -30,7 +33,10 @@ namespace Episerver.Labs.Divvy.Models
             {
                 Id = int.Parse(id),
                 Title = title,
-                ContentType = contentType
+                ContentType = contentType,
+                Description = (string)jobject.SelectToken("description"),
+                Calendar = (string)jobject.SelectToken("calendar"),
+                Owner = (string)jobject.SelectToken("owner_member")
             };
 
             DivvyLogManager.LogRequest("Parsed Values", contentRequest);
