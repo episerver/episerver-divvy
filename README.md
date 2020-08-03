@@ -1,6 +1,11 @@
 ﻿# Episerver Divvy Integration
 
-This add-on allows a Divvy account to interact with an Episerver instance. When editors create content in their Divvy account, corresponding content objects will be created in the Episerver instance. When previewing content, Divvy will retrieve preview HTML directly from Episerver, and provide a way to enter Episerver's Edit Mode directly from Divvy.
+This add-on allows a Divvy account to interact with an Episerver instance.
+
+* When editors create content in their Divvy account, corresponding content objects will be created in the Episerver instance
+* When previewing content, Divvy will retrieve preview HTML directly from Episerver
+* For Episerver content, Divvy provides a "Edit in Episerver" button to link directly to the Episerver UI
+* When content is published or deleted in Episerver, Divvy will be notified and will adjust the content status
 
 ## Installation
 
@@ -9,7 +14,7 @@ This add-on also requires enablement of your Divvy account.
 To enable in Divvy:
 
 1. Access "Integration Admin"
-2. Select "Episerver" in the left menu
+2. Select "Episerver" in the left menu (Divvy will need to enable this option for your account)
 3. Enter the domain name of your Episerver website
 4. Enter the auth token value from your web.config (this should be a 32-digit GUID; anything from http://givemeguid.com/ should be fine)
 5. Select the content types which should be synchronized to Episerver content
@@ -36,29 +41,29 @@ To enable in Episerver:
 </divvy>
 ```
 
-* **enabled:** set to false to disabled the entire system without uninstalling (removing the config element will do the same thing)
-* **debugRole:** users in this role will be able to view the debug info without passing an auth token; leave blank if not needed
+* **enabled:** set to false to disable the entire system without uninstalling (removing the config element will do the same thing)
+* **debugRole:** authenticated users in this role will be able to view the debug API without passing an auth token; leave blank if not needed (see below for more information on the debug API)
 * **authToken:** the token both Episerver and Divvy will use to communicate; this needs to be the same in both systems
 
 For mappings:
 
-* **divvyType:** the name of the Divvy content type that should be handled
+* **divvyType:** the name of a Divvy content type that should be handled
 * **episerverType:** the name of the Episerver type that should be created in response to the specified Divvy content type
 * **parent:** the numeric ID of the content under which the Episerver content should be created
 
 ## Process
 
-When the Episerver integration is enabled in Divvy, an API request is sent to Episerver _every time_ new content is created in Divvy of one of the content types specified during configuration.
+When the Episerver integration is enabled in Divvy, an API request is sent to Episerver _every time_ new content is created in Divvy of one of the content types specified on the configuration screen.
 
-If the Episerver instance is not configured to handle the specific content type created, Episerver returns a `null` value to Divvy, and Divvy functions normally.
+If the Episerver instance is not configured to handle the specific content type created, Episerver returns a `null` value to Divvy, and Divvy continues normally.
 
-If the Episerver instance *is* configured to handle the specific content type created (via a 'mapping' element, as shown above), the Episerver instance will create a draft object of the specifed type, store the mapping between Divvy type and Episerver type, and return the information to Divvy.
+If the Episerver instance *is* configured to handle the specific content type created (via a `mapping` element, as shown above), the Episerver instance will create a draft object of the specified type, store the mapping between Divvy type and Episerver type, and return the information to Divvy.
 
 (Note: the specification of a content type has to occur on both sides. In Divvy, the content type needs to be checked on the configuration screen. In Episerver, a mapping needs to be present which maps the Divvy content type to an Episerver content type.)
 
 When this occurs, Divvy will modify its UI for that content. In the Divvy UI, when Episerver-synchronized content is previwed, Divvy will make an API request to Episerver. Episerver will return a string of HTML to Divvy to display. Additionally, the response from Episerver will contain the Edit Mode URL that Divvy will use when a user clicks the "Edit in Episerver" button.
 
-When Divvy-synchronized content is published or deleted in Episerver, an asynchronous request will be sent to Divvy with the new status of the content object.
+When Divvy-synchronized content is published or deleted in Episerver, an asynchronous request (usually within 30 seconds) will be sent to Divvy with the new status of the content object.
 
 ## Extension Points
 
